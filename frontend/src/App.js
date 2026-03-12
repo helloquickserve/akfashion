@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Layout from '@/components/Layout';
-import '@/App.css';
+import Login from './pages/Login';
+import Layout from './components/Layout';
+import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
