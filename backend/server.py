@@ -455,6 +455,74 @@ async def get_sales_overview(user: User = Depends(get_current_user)):
     
     return {"daily_sales": chart_data}
 
+@api_router.get("/analytics/monthly-sales")
+async def get_monthly_sales(user: User = Depends(get_current_user)):
+    sales = await db.sales.find({}, {"_id": 0}).to_list(None)
+    
+    # Group by month
+    monthly_sales = {}
+    for sale in sales:
+        sale_date = datetime.fromisoformat(sale["created_at"])
+        month_key = sale_date.strftime("%Y-%m")  # Format: "2024-03"
+        month_name = sale_date.strftime("%B %Y")  # Format: "March 2024"
+        
+        if month_key not in monthly_sales:
+            monthly_sales[month_key] = {
+                "month": month_name,
+                "sales": 0
+            }
+        monthly_sales[month_key]["sales"] += sale["total_amount"]
+    
+    # Sort by month and format
+    sorted_months = sorted(monthly_sales.items())
+    chart_data = [
+        {
+            "month": value["month"],
+            "sales": round(value["sales"], 2)
+        }
+        for key, value in sorted_months
+    ]
+    
+    return {"monthly_sales": chart_data}
+
+@api_router.get("/analytics/last-four-months")
+async def get_last_four_months_sales(user: User = Depends(get_current_user)):
+    sales = await db.sales.find({}, {"_id": 0}).to_list(None)
+    
+    # Get last 4 months
+    now = datetime.now(timezone.utc)
+    last_four_months = []
+    
+    for i in range(3, -1, -1):
+        month_date = now - timedelta(days=30 * i)
+        month_key = month_date.strftime("%Y-%m")
+        month_name = month_date.strftime("%B")
+        last_four_months.append({
+            "key": month_key,
+            "month": month_name,
+            "sales": 0
+        })
+    
+    # Calculate sales for each month
+    for sale in sales:
+        sale_date = datetime.fromisoformat(sale["created_at"])
+        sale_month = sale_date.strftime("%Y-%m")
+        
+        for month_data in last_four_months:
+            if sale_month == month_data["key"]:
+                month_data["sales"] += sale["total_amount"]
+    
+    # Format response
+    chart_data = [
+        {
+            "month": m["month"],
+            "sales": round(m["sales"], 2)
+        }
+        for m in last_four_months
+    ]
+    
+    return {"last_four_months": chart_data}
+
 @api_router.get("/analytics/top-products")
 async def get_top_products(user: User = Depends(get_current_user)):
     sales = await db.sales.find({}, {"_id": 0}).to_list(None)
