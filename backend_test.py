@@ -775,6 +775,12 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
             # NEW: Sales CSV Export tests (focused on new feature)
             self.test_sales_csv_export()
             
+            # NEW: Item Sales Report API tests
+            self.test_item_sales_report()
+            
+            # NEW: Item Sales CSV Export tests
+            self.test_item_sales_csv_export()
+            
             # Settings tests
             self.test_settings()
             
