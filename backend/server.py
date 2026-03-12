@@ -384,31 +384,105 @@ async def export_sales_csv(
     
     sales = await db.sales.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
     
-    # Create CSV
+    # Create CSV with item-level details
     output = io.StringIO()
-    fieldnames = ['Date', 'Sale ID', 'Cashier', 'Items Count', 'Subtotal', 'GST', 'Total Amount']
+    fieldnames = ['Sale ID', 'Date', 'Item Name', 'Barcode', 'Quantity', 'Unit Price', 'Total']
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     
+    # Write each item as a separate row
     for sale in sales:
         sale_date = datetime.fromisoformat(sale['created_at'])
         formatted_date = sale_date.strftime('%Y-%m-%d %H:%M:%S')
         
+        for item in sale['items']:
+            writer.writerow({
+                'Sale ID': sale['id'][:8],  # Short ID for readability
+                'Date': formatted_date,
+                'Item Name': item['product_name'],
+                'Barcode': item['barcode'],
+                'Quantity': item['quantity'],
+                'Unit Price': item['price'],
+                'Total': item['total']
+            })
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=sales_items_export.csv"}
+    )
+
+@api_router.get("/reports/item-sales")
+async def get_item_sales_report(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user: User = Depends(get_current_user)
+):
+    query = {}
+    if start_date and end_date:
+        # Add time to make it inclusive of the entire end date
+        end_date_inclusive = end_date + "T23:59:59"
+        query["created_at"] = {
+            "$gte": start_date,
+            "$lte": end_date_inclusive
+        }
+    
+    sales = await db.sales.find(query, {"_id": 0}).to_list(None)
+    
+    # Aggregate items
+    item_stats = {}
+    for sale in sales:
+        for item in sale["items"]:
+            key = f"{item['product_name']}_{item['barcode']}"
+            if key not in item_stats:
+                item_stats[key] = {
+                    "item_name": item["product_name"],
+                    "barcode": item["barcode"],
+                    "quantity_sold": 0,
+                    "revenue": 0
+                }
+            item_stats[key]["quantity_sold"] += item["quantity"]
+            item_stats[key]["revenue"] += item["total"]
+    
+    # Sort by revenue (highest first)
+    sorted_items = sorted(
+        item_stats.values(),
+        key=lambda x: x["revenue"],
+        reverse=True
+    )
+    
+    return {"items": sorted_items}
+
+@api_router.get("/reports/item-sales/export-csv")
+async def export_item_sales_report_csv(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user: User = Depends(get_current_user)
+):
+    # Get the report data
+    report_data = await get_item_sales_report(start_date, end_date, user)
+    items = report_data["items"]
+    
+    # Create CSV
+    output = io.StringIO()
+    fieldnames = ['Item', 'Barcode', 'Quantity Sold', 'Revenue']
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    
+    for item in items:
         writer.writerow({
-            'Date': formatted_date,
-            'Sale ID': sale['id'],
-            'Cashier': sale['cashier_name'],
-            'Items Count': len(sale['items']),
-            'Subtotal': sale['subtotal'],
-            'GST': sale['gst_amount'],
-            'Total Amount': sale['total_amount']
+            'Item': item['item_name'],
+            'Barcode': item['barcode'],
+            'Quantity Sold': item['quantity_sold'],
+            'Revenue': round(item['revenue'], 2)
         })
     
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=sales_export.csv"}
+        headers={"Content-Disposition": "attachment; filename=item_sales_report.csv"}
     )
 
 @api_router.post("/sales", response_model=Sale)
