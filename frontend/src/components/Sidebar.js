@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Package, Receipt, BarChart3, Settings, LogOut, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Receipt, BarChart3, FileText, Settings, LogOut, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -12,6 +12,7 @@ export default function Sidebar({ user, onLogout }) {
     { path: '/products', label: 'Products', icon: Package },
     { path: '/sales', label: 'Sales History', icon: Receipt },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/item-sales-report', label: 'Item Report', icon: FileText },
   ];
 
   if (user.role === 'admin') {
