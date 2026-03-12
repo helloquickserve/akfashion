@@ -53,6 +53,37 @@ export default function SalesPage({ user }) {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      let url = `${API}/sales/export-csv`;
+      const params = [];
+      if (startDate) params.push(`start_date=${startDate}`);
+      if (endDate) params.push(`end_date=${endDate}`);
+      if (params.length > 0) url += `?${params.join('&')}`;
+
+      const response = await axios.get(url, {
+        ...getAuthHeader(),
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `sales_export_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      toast.success('Sales exported successfully');
+    } catch (error) {
+      toast.error('Failed to export sales');
+    }
+  };
+
+  const filteredSales = sales.filter(sale => {
+    if (!startDate || !endDate) return true;
+    const saleDate = sale.created_at.split('T')[0];
+    return saleDate >= startDate && saleDate <= endDate;
+  });
+
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
