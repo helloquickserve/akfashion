@@ -15,6 +15,7 @@ const getAuthHeader = () => ({
 export default function AnalyticsPage() {
   const [salesData, setSalesData] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const [monthlySales, setMonthlySales] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +24,14 @@ export default function AnalyticsPage() {
 
   const fetchAnalytics = async () => {
     try {
-      const [salesResponse, productsResponse] = await Promise.all([
+      const [salesResponse, productsResponse, monthlyResponse] = await Promise.all([
         axios.get(`${API}/analytics/sales-overview`, getAuthHeader()),
-        axios.get(`${API}/analytics/top-products`, getAuthHeader())
+        axios.get(`${API}/analytics/top-products`, getAuthHeader()),
+        axios.get(`${API}/analytics/monthly-sales`, getAuthHeader())
       ]);
       setSalesData(salesResponse.data.daily_sales);
       setTopProducts(productsResponse.data.top_products);
+      setMonthlySales(monthlyResponse.data.monthly_sales);
     } catch (error) {
       toast.error('Failed to fetch analytics');
     } finally {
