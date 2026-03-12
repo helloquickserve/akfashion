@@ -5,6 +5,7 @@ import BillingPage from '../pages/BillingPage';
 import ProductsPage from '../pages/ProductsPage';
 import SalesPage from '../pages/SalesPage';
 import AnalyticsPage from '../pages/AnalyticsPage';
+import ItemSalesReport from '../pages/ItemSalesReport';
 import SettingsPage from '../pages/SettingsPage';
 
 export default function Layout({ user, onLogout }) {
