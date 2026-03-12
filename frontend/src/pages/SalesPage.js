@@ -87,25 +87,75 @@ export default function SalesPage({ user }) {
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-heading font-bold text-4xl tracking-tight text-slate-900">Sales History</h1>
-          <p className="font-body text-slate-600 mt-2">View all transactions</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="font-heading font-bold text-4xl tracking-tight text-slate-900">Sales History</h1>
+            <p className="font-body text-slate-600 mt-2">View all transactions</p>
+          </div>
+          <Button
+            onClick={handleExportCSV}
+            data-testid="export-sales-button"
+            className="bg-indigo-700 hover:bg-indigo-800 text-white"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+
+        {/* Date Filter */}
+        <div className="bg-white border border-slate-200 rounded-md p-4 mb-6 shadow-sm">
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <Label className="font-body text-slate-700 font-medium mb-2 block flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Start Date
+              </Label>
+              <Input
+                type="date"
+                data-testid="sales-start-date-input"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="font-body text-slate-700 font-medium mb-2 block flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                End Date
+              </Label>
+              <Input
+                type="date"
+                data-testid="sales-end-date-input"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border-slate-300"
+              />
+            </div>
+            <Button
+              onClick={() => { setStartDate(''); setEndDate(''); }}
+              data-testid="clear-sales-filter-button"
+              variant="outline"
+              className="border-slate-300"
+            >
+              Clear Filter
+            </Button>
+          </div>
         </div>
 
         {loading ? (
           <div className="text-center py-12">Loading...</div>
-        ) : sales.length === 0 ? (
+        ) : filteredSales.length === 0 ? (
           <Card className="bg-white border border-slate-200 shadow-sm">
             <CardContent className="py-12">
               <div className="text-center text-slate-500">
                 <Receipt className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                <p>No sales recorded yet</p>
+                <p>No sales {startDate && endDate ? 'found for selected date range' : 'recorded yet'}</p>
               </div>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {sales.map((sale) => (
+            {filteredSales.map((sale) => (
               <Card
                 key={sale.id}
                 className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
