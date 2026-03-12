@@ -412,7 +412,7 @@ async def delete_sale(sale_id: str, user: User = Depends(require_admin)):
 
 # Settings Routes
 @api_router.get("/settings", response_model=Settings)
-async def get_settings(user: User = Depends(require_admin)):
+async def get_settings(user: User = Depends(get_current_user)):
     settings = await db.settings.find_one({"id": "settings"}, {"_id": 0})
     if not settings:
         settings = Settings().model_dump()
