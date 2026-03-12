@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -12,18 +13,23 @@ const getAuthHeader = () => ({
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ total_sales: 0, monthly_sales: 0 });
+  const [lastFourMonths, setLastFourMonths] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMetrics();
+    fetchData();
   }, []);
 
-  const fetchMetrics = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`${API}/dashboard/metrics`, getAuthHeader());
-      setMetrics(response.data);
+      const [metricsResponse, monthsResponse] = await Promise.all([
+        axios.get(`${API}/dashboard/metrics`, getAuthHeader()),
+        axios.get(`${API}/analytics/last-four-months`, getAuthHeader())
+      ]);
+      setMetrics(metricsResponse.data);
+      setLastFourMonths(monthsResponse.data.last_four_months);
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
