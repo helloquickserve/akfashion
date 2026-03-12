@@ -18,9 +18,21 @@ export default function Layout({ user, onLogout }) {
           <Route path="/products" element={<ProductsPage user={user} />} />
           <Route path="/sales" element={<SalesPage user={user} />} />
           <Route path="/analytics" element={<AnalyticsPage user={user} />} />
-          {user.role === 'admin' && (
-            <Route path="/settings" element={<SettingsPage user={user} />} />
-          )}
+          <Route 
+            path="/settings" 
+            element={
+              user.role === 'admin' ? (
+                <SettingsPage user={user} />
+              ) : (
+                <div className="p-8">
+                  <div className="max-w-2xl mx-auto text-center py-12">
+                    <h2 className="font-heading font-bold text-2xl text-slate-900 mb-4">Access Denied</h2>
+                    <p className="text-slate-600">You don't have permission to access this page.</p>
+                  </div>
+                </div>
+              )
+            } 
+          />
         </Routes>
       </main>
     </div>
