@@ -51,6 +51,38 @@ export default function AnalyticsPage() {
           <div className="text-center py-12">Loading...</div>
         ) : (
           <div className="space-y-6">
+            {/* Monthly Sales Overview - NEW */}
+            <Card className="bg-white border border-slate-200 shadow-sm" data-testid="monthly-sales-card">
+              <CardHeader>
+                <CardTitle className="font-heading text-xl flex items-center text-slate-800">
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Monthly Sales Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {monthlySales.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">No sales data available</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlySales}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px'
+                        }}
+                        formatter={(value) => [`₹${value.toLocaleString()}`, 'Sales']}
+                      />
+                      <Bar dataKey="sales" fill="#4338ca" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Sales Trend */}
             <Card className="bg-white border border-slate-200 shadow-sm" data-testid="sales-chart-card">
               <CardHeader>
