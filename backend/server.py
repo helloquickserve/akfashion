@@ -367,6 +367,50 @@ async def get_sales(user: User = Depends(get_current_user)):
     sales = await db.sales.find({}, {"_id": 0}).sort("created_at", -1).to_list(None)
     return sales
 
+@api_router.get("/sales/export-csv")
+async def export_sales_csv(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user: User = Depends(get_current_user)
+):
+    query = {}
+    if start_date and end_date:
+        # Add time to make it inclusive of the entire end date
+        end_date_inclusive = end_date + "T23:59:59"
+        query["created_at"] = {
+            "$gte": start_date,
+            "$lte": end_date_inclusive
+        }
+    
+    sales = await db.sales.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
+    
+    # Create CSV
+    output = io.StringIO()
+    fieldnames = ['Date', 'Sale ID', 'Cashier', 'Items Count', 'Subtotal', 'GST', 'Total Amount']
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    
+    for sale in sales:
+        sale_date = datetime.fromisoformat(sale['created_at'])
+        formatted_date = sale_date.strftime('%Y-%m-%d %H:%M:%S')
+        
+        writer.writerow({
+            'Date': formatted_date,
+            'Sale ID': sale['id'],
+            'Cashier': sale['cashier_name'],
+            'Items Count': len(sale['items']),
+            'Subtotal': sale['subtotal'],
+            'GST': sale['gst_amount'],
+            'Total Amount': sale['total_amount']
+        })
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=sales_export.csv"}
+    )
+
 @api_router.post("/sales", response_model=Sale)
 async def create_sale(sale_create: SaleCreate, user: User = Depends(get_current_user)):
     # Calculate totals
