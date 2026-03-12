@@ -634,6 +634,9 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
             # Sales tests
             self.test_sales_operations()
             
+            # NEW: Sales CSV Export tests (focused on new feature)
+            self.test_sales_csv_export()
+            
             # Settings tests
             self.test_settings()
             
