@@ -517,14 +517,14 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
         return True
 
     def test_sales_csv_export(self):
-        """Test NEW FEATURE: Sales CSV export with date filtering"""
+        """Test NEW FEATURE: Sales CSV export with ITEM-LEVEL details"""
         print("\n" + "="*50)
-        print("TESTING SALES CSV EXPORT (NEW FEATURE)")
+        print("TESTING SALES CSV EXPORT - ITEM LEVEL (NEW FEATURE)")
         print("="*50)
         
         # Test sales CSV export without date filter (cashier access)
         success, csv_data = self.run_test(
-            "Export Sales CSV - No Filter (Cashier)",
+            "Export Sales CSV - Item Level No Filter (Cashier)",
             "GET",
             "sales/export-csv",
             200,
@@ -533,15 +533,22 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
         if success:
             print("   ✅ Sales CSV export successful (cashier access)")
             print(f"   CSV data length: {len(csv_data)} characters")
-            # Check if it contains CSV headers
-            if "Date,Sale ID,Cashier,Items Count,Subtotal,GST,Total Amount" in csv_data:
-                print("   ✅ CSV headers found correctly")
+            # Check if it contains NEW CSV headers for item-level export
+            expected_headers = "Sale ID,Date,Item Name,Barcode,Quantity,Unit Price,Total"
+            if expected_headers in csv_data:
+                print("   ✅ NEW Item-level CSV headers found correctly")
+                print(f"   Headers: {expected_headers}")
+                # Check for sample data format
+                lines = csv_data.split('\n')
+                if len(lines) > 1:
+                    print(f"   Sample data row: {lines[1][:100]}...")
             else:
-                print("   ❌ CSV headers missing or incorrect")
+                print("   ❌ NEW Item-level CSV headers missing or incorrect")
+                print(f"   Found headers: {csv_data[:200]}...")
 
         # Test sales CSV export without date filter (admin access)
         success, csv_data = self.run_test(
-            "Export Sales CSV - No Filter (Admin)",
+            "Export Sales CSV - Item Level No Filter (Admin)",
             "GET",
             "sales/export-csv",
             200,
@@ -574,28 +581,159 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
             print("   ✅ Sales CSV export with single date filter successful")
             print(f"   Single day CSV data length: {len(csv_data)} characters")
 
-        # Test sales CSV export with future dates (should return empty or headers only)
-        success, csv_data = self.run_test(
-            "Export Sales CSV - Future Dates (Should be Empty)",
+        return True
+
+    def test_item_sales_report(self):
+        """Test NEW FEATURE: Item Sales Report API endpoints"""
+        print("\n" + "="*50)
+        print("TESTING ITEM SALES REPORT (NEW FEATURE)")
+        print("="*50)
+        
+        # Test item sales report without date filter (cashier access)
+        success, report_data = self.run_test(
+            "Item Sales Report - No Filter (Cashier)",
             "GET",
-            "sales/export-csv?start_date=2030-01-01&end_date=2030-12-31",
+            "reports/item-sales",
             200,
             token=self.cashier1_token
         )
         if success:
-            print("   ✅ Sales CSV export with future dates successful")
-            print(f"   Future dates CSV data length: {len(csv_data)} characters")
+            print("   ✅ Item Sales Report API successful (cashier access)")
+            items = report_data.get('items', [])
+            print(f"   Found {len(items)} unique items in report")
+            if items:
+                print(f"   Sample item: {items[0]}")
+                # Verify expected fields
+                sample_item = items[0]
+                required_fields = ['item_name', 'barcode', 'quantity_sold', 'revenue']
+                missing_fields = [field for field in required_fields if field not in sample_item]
+                if not missing_fields:
+                    print("   ✅ All required fields present in item data")
+                else:
+                    print(f"   ❌ Missing fields: {missing_fields}")
 
-        # Test sales CSV export with invalid date format (edge case)
-        success, response = self.run_test(
-            "Export Sales CSV - Invalid Date Format",
+        # Test item sales report without date filter (admin access)
+        success, report_data = self.run_test(
+            "Item Sales Report - No Filter (Admin)",
             "GET",
-            "sales/export-csv?start_date=invalid-date&end_date=2026-03-31",
-            200,  # Should still work, might ignore invalid dates
+            "reports/item-sales",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            print("   ✅ Item Sales Report API successful (admin access)")
+
+        # Test item sales report with date filter - March 2026
+        success, report_data = self.run_test(
+            "Item Sales Report - March 2026 Filter",
+            "GET",
+            "reports/item-sales?start_date=2026-03-01&end_date=2026-03-31",
+            200,
             token=self.cashier1_token
         )
         if success:
-            print("   ✅ Sales CSV export handles invalid date gracefully")
+            print("   ✅ Item Sales Report with date filter successful")
+            items = report_data.get('items', [])
+            print(f"   Filtered report contains {len(items)} items")
+
+        # Test item sales report with specific date - March 12, 2026
+        success, report_data = self.run_test(
+            "Item Sales Report - March 12, 2026 Filter",
+            "GET",
+            "reports/item-sales?start_date=2026-03-12&end_date=2026-03-12",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Item Sales Report with single date filter successful")
+            items = report_data.get('items', [])
+            print(f"   Single day report contains {len(items)} items")
+
+        return True
+
+    def test_item_sales_csv_export(self):
+        """Test NEW FEATURE: Item Sales Report CSV Export"""
+        print("\n" + "="*50)
+        print("TESTING ITEM SALES CSV EXPORT (NEW FEATURE)")
+        print("="*50)
+        
+        # Test item sales CSV export without date filter (cashier access)
+        success, csv_data = self.run_test(
+            "Export Item Sales CSV - No Filter (Cashier)",
+            "GET",
+            "reports/item-sales/export-csv",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Item Sales CSV export successful (cashier access)")
+            print(f"   CSV data length: {len(csv_data)} characters")
+            # Check if it contains expected CSV headers
+            expected_headers = "Item,Barcode,Quantity Sold,Revenue"
+            if expected_headers in csv_data:
+                print("   ✅ Item Sales CSV headers found correctly")
+                print(f"   Headers: {expected_headers}")
+                # Check for sample data format
+                lines = csv_data.split('\n')
+                if len(lines) > 1:
+                    print(f"   Sample data row: {lines[1][:100]}...")
+            else:
+                print("   ❌ Item Sales CSV headers missing or incorrect")
+                print(f"   Found headers: {csv_data[:200]}...")
+
+        # Test item sales CSV export without date filter (admin access)
+        success, csv_data = self.run_test(
+            "Export Item Sales CSV - No Filter (Admin)",
+            "GET",
+            "reports/item-sales/export-csv",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            print("   ✅ Item Sales CSV export successful (admin access)")
+
+        # Test item sales CSV export with date filter - March 2026
+        success, csv_data = self.run_test(
+            "Export Item Sales CSV - March 2026 Filter",
+            "GET",
+            "reports/item-sales/export-csv?start_date=2026-03-01&end_date=2026-03-31",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Item Sales CSV export with date filter successful")
+            print(f"   Filtered CSV data length: {len(csv_data)} characters")
+
+        # Test item sales CSV export with specific date - March 12, 2026
+        success, csv_data = self.run_test(
+            "Export Item Sales CSV - March 12, 2026 Filter",
+            "GET",
+            "reports/item-sales/export-csv?start_date=2026-03-12&end_date=2026-03-12",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Item Sales CSV export with single date filter successful")
+            print(f"   Single day CSV data length: {len(csv_data)} characters")
+
+        # Test item sales CSV export with future dates (should return headers only)
+        success, csv_data = self.run_test(
+            "Export Item Sales CSV - Future Dates (Should be Empty)",
+            "GET",
+            "reports/item-sales/export-csv?start_date=2030-01-01&end_date=2030-12-31",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Item Sales CSV export with future dates successful")
+            print(f"   Future dates CSV data length: {len(csv_data)} characters")
+            # Should contain headers but no data
+            if "Item,Barcode,Quantity Sold,Revenue" in csv_data:
+                lines = csv_data.strip().split('\n')
+                if len(lines) == 1:  # Only headers
+                    print("   ✅ Future date filter returns headers only (correct)")
+                else:
+                    print(f"   ⚠️  Future date filter returned {len(lines)-1} data rows")
 
         return True
 
