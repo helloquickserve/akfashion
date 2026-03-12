@@ -1,0 +1,17 @@
+node_modules
+__pycache__
+*.pyc
+.env
+.env.local
+.DS_Store
+*.log
+.vscode
+.idea
+tests/
+scripts/
+*.md
+!VERCEL_DEPLOYMENT.md
+frontend/node_modules
+backend/__pycache__
+backend/.env
+frontend/.env
