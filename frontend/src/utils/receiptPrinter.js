@@ -11,32 +11,32 @@ export const generateReceipt = (saleData, settings) => {
     <div id="receipt-print" style="width: 80mm; font-family: 'Courier New', monospace; font-size: 12px; padding: 10px;">
       <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
         <h2 style="margin: 0; font-size: 18px; font-weight: bold;">${business_name}</h2>
-        ${business_address ? `<p style="margin: 5px 0; font-size: 11px;">${business_address}</p>` : ''}
-        ${gst_number ? `<p style="margin: 5px 0; font-size: 11px;">GST: ${gst_number}</p>` : ''}
+        ${business_address ? `<p style="margin: 5px 0; font-size: 11px; font-weight: bold;">${business_address}</p>` : ''}
+        ${gst_number ? `<p style="margin: 5px 0; font-size: 11px; font-weight: bold;">GST: ${gst_number}</p>` : ''}
       </div>
 
       <div style="margin-bottom: 10px;">
-        <p style="margin: 3px 0;"><strong>Date:</strong> ${receiptDate}</p>
-        <p style="margin: 3px 0;"><strong>Cashier:</strong> ${cashier_name}</p>
+        <p style="margin: 3px 0; font-weight: bold;"><strong>Date:</strong> ${receiptDate}</p>
+        <p style="margin: 3px 0; font-weight: bold;"><strong>Cashier:</strong> ${cashier_name}</p>
       </div>
 
       <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; margin-bottom: 10px;">
-        <table style="width: 100%; font-size: 11px;">
+        <table style="width: 100%; font-size: 11px; font-weight: bold;">
           <thead>
             <tr>
-              <th style="text-align: left; padding: 5px 0;">Item</th>
-              <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Price</th>
-              <th style="text-align: right;">Total</th>
+              <th style="text-align: left; padding: 5px 0; font-weight: bold;">Item</th>
+              <th style="text-align: center; font-weight: bold;">Qty</th>
+              <th style="text-align: right; font-weight: bold;">Price</th>
+              <th style="text-align: right; font-weight: bold;">Total</th>
             </tr>
           </thead>
           <tbody>
             ${items.map(item => `
               <tr>
-                <td style="padding: 5px 0;">${item.product_name}</td>
-                <td style="text-align: center;">${item.quantity}</td>
-                <td style="text-align: right;">₹${item.price.toFixed(2)}</td>
-                <td style="text-align: right;">₹${item.total.toFixed(2)}</td>
+                <td style="padding: 5px 0; font-weight: bold;">${item.product_name}</td>
+                <td style="text-align: center; font-weight: bold;">${item.quantity}</td>
+                <td style="text-align: right; font-weight: bold;">₹${item.price.toFixed(2)}</td>
+                <td style="text-align: right; font-weight: bold;">₹${item.total.toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -44,25 +44,25 @@ export const generateReceipt = (saleData, settings) => {
       </div>
 
       <div style="margin-bottom: 10px;">
-        <table style="width: 100%; font-size: 12px;">
+        <table style="width: 100%; font-size: 12px; font-weight: bold;">
           <tr>
             <td style="text-align: right; padding: 3px 0;"><strong>Subtotal:</strong></td>
-            <td style="text-align: right; padding: 3px 0; padding-left: 20px;">₹${subtotal.toFixed(2)}</td>
+            <td style="text-align: right; padding: 3px 0; padding-left: 20px; font-weight: bold;">₹${subtotal.toFixed(2)}</td>
           </tr>
           <tr>
             <td style="text-align: right; padding: 3px 0;"><strong>GST (18%):</strong></td>
-            <td style="text-align: right; padding: 3px 0; padding-left: 20px;">₹${gst_amount.toFixed(2)}</td>
+            <td style="text-align: right; padding: 3px 0; padding-left: 20px; font-weight: bold;">₹${gst_amount.toFixed(2)}</td>
           </tr>
           <tr style="border-top: 2px solid #000;">
-            <td style="text-align: right; padding: 8px 0; font-size: 14px;"><strong>TOTAL:</strong></td>
-            <td style="text-align: right; padding: 8px 0; padding-left: 20px; font-size: 14px;"><strong>₹${total_amount.toFixed(2)}</strong></td>
+            <td style="text-align: right; padding: 8px 0; font-size: 14px; font-weight: bold;"><strong>TOTAL:</strong></td>
+            <td style="text-align: right; padding: 8px 0; padding-left: 20px; font-size: 14px; font-weight: bold;"><strong>₹${total_amount.toFixed(2)}</strong></td>
           </tr>
         </table>
       </div>
 
       <div style="text-align: center; border-top: 2px dashed #000; padding-top: 10px; margin-top: 10px;">
-        <p style="margin: 5px 0; font-size: 11px;">Thank you for shopping!</p>
-        <p style="margin: 5px 0; font-size: 10px;">Visit again soon</p>
+        <p style="margin: 5px 0; font-size: 11px; font-weight: bold;">Thank you for shopping!</p>
+        <p style="margin: 5px 0; font-size: 10px; font-weight: bold;">Visit again soon</p>
       </div>
     </div>
   `;
@@ -96,11 +96,16 @@ export const printReceipt = (receiptHTML, settings) => {
           body {
             margin: 0;
             padding: 0;
+            font-weight: bold;
           }
           @media print {
             body {
               margin: 0;
               padding: 0;
+              font-weight: bold;
+            }
+            * {
+              font-weight: bold !important;
             }
           }
         </style>
