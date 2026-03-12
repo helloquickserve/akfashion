@@ -345,7 +345,7 @@ class AKFashionHouseAPITester:
         print("TESTING SETTINGS")
         print("="*50)
         
-        # Test get settings (admin only)
+        # Test get settings (should work for all users now)
         success, settings = self.run_test(
             "Get Settings (Admin)",
             "GET",
@@ -355,29 +355,60 @@ class AKFashionHouseAPITester:
         )
         if success:
             print(f"   Business Name: {settings.get('business_name')}")
+            print(f"   Printer Name: {settings.get('printer_name')}")
+            print(f"   Paper Size: {settings.get('paper_size')}")
+            print(f"   Auto Print: {settings.get('auto_print')}")
             print(f"   GST Number: {settings.get('gst_number')}")
 
-        # Test get settings with cashier (should fail)
+        # Test get settings with cashier (should work for reading)
         success, _ = self.run_test(
-            "Get Settings (Cashier - Should Fail)",
+            "Get Settings (Cashier)",
             "GET",
             "settings",
-            403,
+            200,
             token=self.cashier1_token
         )
 
-        # Test update settings (admin only)
+        # Test update settings for auto-print functionality (admin only)
         update_data = {
+            "auto_print": True,
+            "printer_name": "EPSON TM-T82",
+            "paper_size": "80mm",
             "gst_number": "27XXXXX1234X1Z5",
             "business_address": "123 Fashion Street, Mumbai"
         }
-        success, _ = self.run_test(
-            "Update Settings (Admin)",
+        success, updated_settings = self.run_test(
+            "Update Settings - Enable Auto Print (Admin)",
             "PUT",
             "settings",
             200,
             data=update_data,
             token=self.admin_token
+        )
+        if success:
+            print(f"   Auto Print Enabled: {updated_settings.get('auto_print')}")
+
+        # Test update settings with different paper size
+        update_data_58mm = {
+            "paper_size": "58mm"
+        }
+        success, _ = self.run_test(
+            "Update Settings - Change Paper Size to 58mm (Admin)",
+            "PUT",
+            "settings",
+            200,
+            data=update_data_58mm,
+            token=self.admin_token
+        )
+
+        # Test update settings with cashier (should fail)
+        success, _ = self.run_test(
+            "Update Settings (Cashier - Should Fail)",
+            "PUT",
+            "settings",
+            403,
+            data={"auto_print": False},
+            token=self.cashier1_token
         )
 
         return True
