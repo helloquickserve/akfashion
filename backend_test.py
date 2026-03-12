@@ -399,6 +399,35 @@ class AKFashionHouseAPITester:
         if success:
             print(f"   Daily sales data points: {len(overview.get('daily_sales', []))}")
 
+        # Test monthly sales (NEW FEATURE)
+        success, monthly = self.run_test(
+            "Monthly Sales Overview",
+            "GET",
+            "analytics/monthly-sales",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            monthly_data = monthly.get('monthly_sales', [])
+            print(f"   Monthly sales data points: {len(monthly_data)}")
+            if monthly_data:
+                print(f"   Sample month: {monthly_data[0].get('month')} - ₹{monthly_data[0].get('sales', 0)}")
+
+        # Test last four months (NEW FEATURE)
+        success, last_four = self.run_test(
+            "Last Four Months Sales",
+            "GET",
+            "analytics/last-four-months",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            four_months_data = last_four.get('last_four_months', [])
+            print(f"   Last 4 months data points: {len(four_months_data)}")
+            if four_months_data:
+                for month in four_months_data:
+                    print(f"   {month.get('month')}: ₹{month.get('sales', 0)}")
+
         # Test top products
         success, top_products = self.run_test(
             "Top Products",
