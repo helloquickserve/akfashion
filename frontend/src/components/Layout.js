@@ -19,6 +19,7 @@ export default function Layout({ user, onLogout }) {
           <Route path="/products" element={<ProductsPage user={user} />} />
           <Route path="/sales" element={<SalesPage user={user} />} />
           <Route path="/analytics" element={<AnalyticsPage user={user} />} />
+          <Route path="/item-sales-report" element={<ItemSalesReport user={user} />} />
           <Route 
             path="/settings" 
             element={
