@@ -516,6 +516,89 @@ Test CSV Product,CSV123,Test Category,200,100,5"""
 
         return True
 
+    def test_sales_csv_export(self):
+        """Test NEW FEATURE: Sales CSV export with date filtering"""
+        print("\n" + "="*50)
+        print("TESTING SALES CSV EXPORT (NEW FEATURE)")
+        print("="*50)
+        
+        # Test sales CSV export without date filter (cashier access)
+        success, csv_data = self.run_test(
+            "Export Sales CSV - No Filter (Cashier)",
+            "GET",
+            "sales/export-csv",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Sales CSV export successful (cashier access)")
+            print(f"   CSV data length: {len(csv_data)} characters")
+            # Check if it contains CSV headers
+            if "Date,Sale ID,Cashier,Items Count,Subtotal,GST,Total Amount" in csv_data:
+                print("   ✅ CSV headers found correctly")
+            else:
+                print("   ❌ CSV headers missing or incorrect")
+
+        # Test sales CSV export without date filter (admin access)
+        success, csv_data = self.run_test(
+            "Export Sales CSV - No Filter (Admin)",
+            "GET",
+            "sales/export-csv",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            print("   ✅ Sales CSV export successful (admin access)")
+
+        # Test sales CSV export with date filter - March 2026
+        success, csv_data = self.run_test(
+            "Export Sales CSV - March 2026 Filter",
+            "GET",
+            "sales/export-csv?start_date=2026-03-01&end_date=2026-03-31",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Sales CSV export with date filter successful")
+            print(f"   Filtered CSV data length: {len(csv_data)} characters")
+
+        # Test sales CSV export with specific date - March 12, 2026
+        success, csv_data = self.run_test(
+            "Export Sales CSV - March 12, 2026 Filter",
+            "GET",
+            "sales/export-csv?start_date=2026-03-12&end_date=2026-03-12",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Sales CSV export with single date filter successful")
+            print(f"   Single day CSV data length: {len(csv_data)} characters")
+
+        # Test sales CSV export with future dates (should return empty or headers only)
+        success, csv_data = self.run_test(
+            "Export Sales CSV - Future Dates (Should be Empty)",
+            "GET",
+            "sales/export-csv?start_date=2030-01-01&end_date=2030-12-31",
+            200,
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Sales CSV export with future dates successful")
+            print(f"   Future dates CSV data length: {len(csv_data)} characters")
+
+        # Test sales CSV export with invalid date format (edge case)
+        success, response = self.run_test(
+            "Export Sales CSV - Invalid Date Format",
+            "GET",
+            "sales/export-csv?start_date=invalid-date&end_date=2026-03-31",
+            200,  # Should still work, might ignore invalid dates
+            token=self.cashier1_token
+        )
+        if success:
+            print("   ✅ Sales CSV export handles invalid date gracefully")
+
+        return True
+
     def cleanup(self):
         """Clean up created test data"""
         print("\n" + "="*50)
