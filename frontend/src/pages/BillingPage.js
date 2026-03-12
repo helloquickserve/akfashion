@@ -118,8 +118,28 @@ export default function BillingPage() {
         }))
       };
 
-      await axios.post(`${API}/sales`, saleData, getAuthHeader());
+      // Process the sale
+      const saleResponse = await axios.post(`${API}/sales`, saleData, getAuthHeader());
+      const completedSale = saleResponse.data;
+
       toast.success('Sale completed successfully!');
+      
+      // Fetch settings for printing
+      try {
+        const settingsResponse = await axios.get(`${API}/settings`, getAuthHeader());
+        const settings = settingsResponse.data;
+        
+        // Attempt auto-print if enabled
+        const printed = await handleAutoPrint(completedSale, settings);
+        if (printed) {
+          toast.success('Receipt sent to printer');
+        }
+      } catch (settingsError) {
+        // If settings fetch fails (e.g., cashier accessing settings), just skip printing
+        console.log('Could not fetch settings for printing');
+      }
+
+      // Clear cart and refocus
       setCart([]);
       barcodeInputRef.current?.focus();
     } catch (error) {
